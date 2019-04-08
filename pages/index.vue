@@ -1,13 +1,6 @@
 <template>
   <section class="container">
     <div>
-      <!--<logo />-->
-      <!--<h1 class="title">-->
-        <!--bet-advizor-bot-->
-      <!--</h1>-->
-      <!--<h2 class="subtitle">-->
-        <!--Bet Advizor Bot System1-->
-      <!--</h2>-->
       <div class="row">
         <div v-if="$store.state.auth">
           <p>
@@ -20,7 +13,7 @@
         </div>
         <p v-else>
           Please
-          <NuxtLink to="/login"> login </NuxtLink>.
+          <NuxtLink to="/login">login</NuxtLink>.
         </p>
       </div>
     </div>
@@ -33,14 +26,14 @@
 const Cookie = process.client ? require('js-cookie') : undefined
 
 export default {
+  components: {
+    // Logo
+  },
   methods: {
     logout() {
       Cookie.remove('auth')
       this.$store.commit('setAuth', null)
     }
-  },
-  components: {
-    // Logo
   }
 }
 </script>

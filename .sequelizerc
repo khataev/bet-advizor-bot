@@ -1,0 +1,9 @@
+// TODO: do we need it in repo (heroku)?
+const path = require('path');
+
+module.exports = {
+  'config': path.resolve('plugins', 'config', 'database.js'),
+  'models-path': path.resolve('plugins', 'db', 'models'),
+  'seeders-path': path.resolve('plugins', 'db', 'seeders'),
+  'migrations-path': path.resolve('plugins', 'db', 'migrations')
+}

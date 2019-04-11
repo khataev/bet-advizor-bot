@@ -1,45 +1,22 @@
 <template>
-  <section class="container">
+  <section class="login-wrapper">
     <div>
       <div class="row">
-        <div v-if="$store.state.auth">
+        <div v-if="$store.state.authUser">
           <p>
-            You are authenticated. You can see the
-            <NuxtLink to="/secret"> secret page </NuxtLink>!
+            С возвращением, {{$store.state.authUser.email}}!
           </p>
-          <button @click="logout">
-            Logout
-          </button>
         </div>
         <p v-else>
-          Please
-          <NuxtLink to="/login">login</NuxtLink>.
+          Добро пожаловать, гость!
         </p>
       </div>
     </div>
   </section>
 </template>
 
-<script>
-// import Logo from '~/components/Logo.vue'
-
-const Cookie = process.client ? require('js-cookie') : undefined
-
-export default {
-  components: {
-    // Logo
-  },
-  methods: {
-    logout() {
-      Cookie.remove('auth')
-      this.$store.commit('setAuth', null)
-    }
-  }
-}
-</script>
-
 <style>
-.container {
+.login-wrapper {
   margin: 0 auto;
   min-height: 100vh;
   display: flex;

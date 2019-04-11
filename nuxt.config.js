@@ -1,7 +1,7 @@
 const pkg = require('./package')
 
 module.exports = {
-  mode: 'universal',
+  mode: 'spa',
 
   /*
    ** Headers of the page
@@ -29,6 +29,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
+  // plugins: [{ src: '~/plugins/localStorage.js', ssr: false }],
   plugins: [],
 
   /*
@@ -36,8 +37,8 @@ module.exports = {
    */
   modules: [
     // Doc: https://bootstrap-vue.js.org/docs/
-    'bootstrap-vue/nuxt',
-    '@nuxtjs/pwa'
+    'bootstrap-vue/nuxt'
+    // '@nuxtjs/pwa'
   ],
 
   /*
@@ -53,10 +54,30 @@ module.exports = {
         config.module.rules.push({
           enforce: 'pre',
           test: /\.(js|vue)$/,
-          loader: 'eslint-loader',
+          // loader: 'eslint-loader',
           exclude: /(node_modules)/
         })
       }
     }
-  }
+  },
+
+  /*
+   ** Add server middleware
+   ** Nuxt.js uses `connect` module as server
+   ** So most of express middleware works with nuxt.js server middleware
+   */
+  serverMiddleware: [
+    // // body-parser middleware
+    // bodyParser.json(),
+    // // session middleware
+    // session({
+    //   secret: 'super-secret-key',
+    //   resave: false,
+    //   saveUninitialized: false,
+    //   cookie: { maxAge: 60000 }
+    // }),
+    // Api middleware
+    // We add /api/login & /api/logout routes
+    '~/server/api'
+  ]
 }

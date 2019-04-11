@@ -1,11 +1,12 @@
 <template>
   <div class="container login-container">
     <div class="row">
-      <div class="col-md-12 login-form-1">
-        <h3>Login for Form 1</h3>
+      <div class="col-md-6 login-form-1">
+        <h3>Login</h3>
         <form>
           <div class="form-group">
             <input
+              v-model="formEmail"
               type="text"
               class="form-control"
               placeholder="Your Email *"
@@ -14,6 +15,7 @@
           </div>
           <div class="form-group">
             <input
+              v-model="formPassword"
               type="password"
               class="form-control"
               placeholder="Your Password *"
@@ -21,11 +23,11 @@
             />
           </div>
           <div class="form-group">
-            <input class="btnSubmit" value="Login" @click="postLogin" />
+            <input class="btnSubmit" value="Login" @click="login" />
           </div>
-          <div class="form-group">
-            <a href="#" class="ForgetPwd">Forget Password?</a>
-          </div>
+          <!--<div class="form-group">-->
+          <!--<a href="#" class="ForgetPwd">Forget Password?</a>-->
+          <!--</div>-->
         </form>
       </div>
     </div>
@@ -33,21 +35,32 @@
 </template>
 
 <script>
-const Cookie = process.client ? require('js-cookie') : undefined
+// const Cookie = process.client ? require('js-cookie') : undefined
 
 export default {
   middleware: 'notAuthenticated',
+  data() {
+    return {
+      formError: null,
+      formEmail: '',
+      formPassword: ''
+    }
+  },
   methods: {
-    postLogin() {
-      setTimeout(() => {
-        // we simulate the async request with timeout.
-        const auth = {
-          accessToken: 'someStringGotFromApiServiceWithAjax'
-        }
-        this.$store.commit('setAuth', auth) // mutating to store for client rendering
-        Cookie.set('auth', auth) // saving token in cookie for server rendering
+    async login() {
+      try {
+        console.log('client login')
+        await this.$store.dispatch('login', {
+          email: this.formEmail,
+          password: this.formPassword
+        })
+        this.formEmail = ''
+        this.formPassword = ''
+        this.formError = null
         this.$router.push('/')
-      }, 1000)
+      } catch (e) {
+        this.formError = e.message
+      }
     }
   }
 }

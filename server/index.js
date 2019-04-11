@@ -3,6 +3,8 @@ const consola = require('consola')
 const { Nuxt, Builder } = require('nuxt')
 const app = express()
 const bodyParser = require('body-parser')
+const session = require('express-session')
+const passport = require('passport')
 
 const constants = require('../plugins/constants')
 const logger = require('../plugins/logger')
@@ -32,11 +34,23 @@ async function start() {
   }
 
   logger.warn('start_express_server')
+  // TODO: move middleware initialization to function
   const app = express()
   const api_tokens = settings.get('credentials.telegram_bot.api_tokens')
   // Here we are configuring express to use body-parser as middle-ware.
   app.use(bodyParser.urlencoded({ extended: false }))
   app.use(bodyParser.json())
+  app.use(
+    session({
+      // TODO: real secret key
+      secret: 'keyboard cat',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { secure: !config.dev }
+    })
+  )
+  app.use(passport.initialize())
+  app.use(passport.session())
 
   app.get('/version', function(req, res) {
     console.debug('get /')

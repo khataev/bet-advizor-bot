@@ -3,9 +3,7 @@
     <div>
       <div class="row">
         <div v-if="$store.state.authUser">
-          <p>
-            С возвращением, {{$store.state.authUser.email}}!
-          </p>
+          <p>С возвращением, {{ $store.state.authUser.name }}!</p>
         </div>
         <p v-else>
           Добро пожаловать, гость!

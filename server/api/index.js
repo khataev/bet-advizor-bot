@@ -24,7 +24,7 @@ router.post('/login', (req, res) => {
   User.findOne({ where: { email: req.body.email } })
     .then(user => {
       if (user && user.verifyPassword(req.body.password)) {
-        const authUser = { email: user.email }
+        const authUser = { email: user.email, name: user.name }
         req.session.authUser = authUser
         return res.json(authUser)
       } else {

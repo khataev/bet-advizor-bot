@@ -9,17 +9,17 @@ import axios from 'axios'
 const createStore = () => {
   return new Vuex.Store({
     state: () => ({
-      // authUSer: null
-      authUser: localStorage.getItem('authUser')
+      authUser: null
+      // authUser: localStorage.getItem('authUser')
     }),
     mutations: {
       SET_USER: function(state, user) {
         state.authUser = user
-        if (user) {
-          localStorage.setItem('authUser', user)
-        } else {
-          localStorage.removeItem('authUser')
-        }
+        // if (user) {
+        //   // localStorage.setItem('authUser', user)
+        // } else {
+        //   // localStorage.removeItem('authUser')
+        // }
       }
     },
     actions: {

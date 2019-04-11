@@ -5,7 +5,7 @@
         <div clas="navbar-custom-menu">
           <ul class="nav navbar-nav>">
             <li v-if="$store.state.authUser">
-              <NuxtLink to="/secret">Secret</NuxtLink>
+              <NuxtLink to="/dashboard">Dashboard</NuxtLink>
             </li>
             <li v-if="$store.state.authUser">
               <a href="#" @click="logout">Logout</a>
@@ -25,28 +25,28 @@
 </template>
 
 <script>
-  // import Logo from '~/components/Logo.vue'
+// import Logo from '~/components/Logo.vue'
 
-  export default {
-    components: {
-      // Logo
-    },
-    methods: {
-      // logout() {
-      //   debugger
-      //   Cookie.remove('auth')
-      //   this.$store.commit('setAuth', null)
-      // }
-      async logout() {
-        try {
-          await this.$store.dispatch('logout')
-          this.$router.push('/login')
-        } catch (e) {
-          this.formError = e.message
-        }
+export default {
+  components: {
+    // Logo
+  },
+  methods: {
+    // logout() {
+    //   debugger
+    //   Cookie.remove('auth')
+    //   this.$store.commit('setAuth', null)
+    // }
+    async logout() {
+      try {
+        await this.$store.dispatch('logout')
+        this.$router.push('/login')
+      } catch (e) {
+        this.formError = e.message
       }
     }
   }
+}
 </script>
 
 <style>
@@ -97,7 +97,7 @@ html {
   color: #fff;
   background-color: #35495e;
 }
-  ul.nav>li {
-    padding: 10px;
-  }
+ul.nav > li {
+  padding: 10px;
+}
 </style>

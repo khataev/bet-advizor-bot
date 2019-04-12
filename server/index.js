@@ -42,10 +42,12 @@ async function start() {
   app.use(bodyParser.json())
   app.use(
     session({
+      name: 'advizor_bot_session',
       // TODO: real secret key
       secret: 'keyboard cat',
       resave: false,
       saveUninitialized: false,
+      proxy: !config.dev,
       cookie: { secure: !config.dev }
     })
   )

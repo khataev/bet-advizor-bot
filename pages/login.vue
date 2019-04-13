@@ -51,7 +51,6 @@ export default {
   methods: {
     async login() {
       try {
-        console.log('client login')
         await this.$store.dispatch('login', {
           email: this.formEmail,
           password: this.formPassword

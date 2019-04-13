@@ -1,9 +1,8 @@
 import express from 'express'
-const Sequelize = require('sequelize')
-const settings = require('./../../plugins/config')
-const database = require('./../../plugins/config/database')
-const sequelize = new Sequelize(database[settings.get('env')])
-const User = sequelize.import('./../../plugins/db/models/user')
+// TODO: how to alias models without relative path?
+const models = require('./../../plugins/db/models')
+const Bot = models.Bot
+const User = models.User
 
 // Create express router
 const router = express.Router()
@@ -39,6 +38,16 @@ router.post('/logout', (req, res) => {
   delete req.session.authUser
   // req.session.destroy()
   res.json({ ok: true })
+})
+
+router.get('/bots', (req, res) => {
+  // res.json([{ value: 'ruha_bot', name: 'Ruha Stavit BOT' }])
+  Bot.findAll().then(bots => {
+    const botOptions = bots.map(bot => {
+      return { code: bot.code, name: bot.name }
+    })
+    res.json(botOptions)
+  })
 })
 
 // Export the server middleware

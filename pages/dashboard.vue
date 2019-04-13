@@ -12,8 +12,13 @@
             @change="onchange()"
           >
             <option disabled value="">Выберите бота</option>
-            <option>Ruha ставит</option>
-            <option selected>Мяч продакшн</option>
+            <!-- TODO: use component -->
+            <option
+              v-for="option in botOptions"
+              :key="option.value"
+              :value="option.value"
+              >{{ option.name }}</option
+            >
           </select>
           <!--<br />-->
           <!--<span>Selected: {{ key }}</span>-->
@@ -35,6 +40,9 @@
             </thead>
           </table>
         </div>
+        <div class="row">
+          <span class="errorText">{{ formError }}</span>
+        </div>
       </div>
       <div class="col-1" />
     </div>
@@ -42,19 +50,40 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
-  middleware: 'authenticated',
+  // TODO: return
+  // middleware: 'authenticated',
   data() {
     return {
-      key: ''
+      key: '',
+      botOptions: [],
+      formError: null
     }
+  },
+  beforeMount() {
+    this.fetchBots()
   },
   methods: {
     onchange: function() {
       console.log(this.key)
+    },
+    fetchBots: function() {
+      axios
+        .get('/api/bots')
+        .then(response => (this.botOptions = response.data))
+        .catch(error => {
+          console.log(error.message)
+          this.formError = error.message
+        })
     }
   }
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.errorText {
+  color: red;
+}
+</style>

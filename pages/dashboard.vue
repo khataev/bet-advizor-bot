@@ -59,32 +59,7 @@
         </b-row>
         <b-row>
           <b-col>
-            <table class="table table-bordered table-striped">
-              <thead>
-                <tr>
-                  <th>Telegram ID</th>
-                  <th>E-mail ?</th>
-                  <th>Состояние подписки</th>
-                  <th>Дата активации</th>
-                  <th>Действительна до</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="item in subscribers"
-                  :key="item.chatId"
-                  :value="item.chatId"
-                >
-                  <td>{{ item.chatId }}</td>
-                  <td>{{ item.email }}</td>
-                  <td>
-                    {{ item.activeSubscription ? 'Активна' : 'Неактивна' }}
-                  </td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
+            <BotSubscribers :items="subscribers"></BotSubscribers>
           </b-col>
         </b-row>
         <!-- Область для показа ошибки -->
@@ -101,6 +76,8 @@
 
 <script>
 import axios from 'axios'
+
+import BotSubscribers from '~/components/BotSubscribers.vue'
 
 export default {
   // TODO: return
@@ -156,6 +133,9 @@ export default {
       const bot = this.botOptions.find(element => element.id == botId)
       return bot.code
     }
+  },
+  components: {
+    BotSubscribers
   }
 }
 </script>

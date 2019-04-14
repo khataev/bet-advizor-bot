@@ -1,86 +1,102 @@
 <template>
-  <div class="container">
-    <h1>Dashboard</h1>
-    <div class="row">
-      <div class="col-1" />
-      <div class="col-10">
-        <div class="row">
-          <select
-            id="botSelect"
-            v-model="selectedBotId"
-            class="form-control"
-            @change="onchange()"
-          >
-            <option disabled value="choose_value">Выберите бота</option>
-            <!-- TODO: use component -->
-            <option
-              v-for="option in botOptions"
-              :key="option.id"
-              :value="option.id"
-              >{{ option.name }}</option
+  <b-container>
+    <b-row>
+      <b-col>
+        <h1>Панель управления</h1>
+      </b-col>
+    </b-row>
+    <hr />
+    <b-row>
+      <b-col cols="1" />
+      <b-col>
+        <!-- Бот -->
+        <b-row>
+          <b-col>
+            <select
+              id="botSelect"
+              v-model="selectedBotId"
+              class="form-control"
+              @change="onchange()"
             >
-          </select>
-          <!--<br />-->
-          <!--<span>Selected: {{ key }}</span>-->
-        </div>
+              <option disabled value="choose_value">Выберите бота</option>
+              <!-- TODO: use component -->
+              <option
+                v-for="option in botOptions"
+                :key="option.id"
+                :value="option.id"
+                >{{ option.name }}
+              </option>
+            </select>
+          </b-col>
+        </b-row>
         <br />
-        <div class="row">
-          <h2>Подписки</h2>
-        </div>
-        <div class="row">
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th>Telegram ID</th>
-                <th>E-mail ?</th>
-                <th>Состояние подписки</th>
-                <th>Дата активации</th>
-                <th>Действительна до</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="item in subscribers"
-                :key="item.chatId"
-                :value="item.chatId"
+        <!-- Область рассылки -->
+        <b-row>
+          <b-col>
+            <b-form-group>
+              <span>Текст рассылки</span>
+              <b-form-textarea
+                id="message"
+                v-model="messageText"
+                placeholder="Введите текст рассылки..."
+                rows="6"
+                max-rows="12"
+              ></b-form-textarea>
+            </b-form-group>
+            <span class="sendMessageResult">{{ sendMessageResult }}</span>
+            <div class="float-right">
+              <b-button variant="outline-primary" @click="sendMessage"
+                >Разослать</b-button
               >
-                <td>{{ item.chatId }}</td>
-                <td>{{ item.email }}</td>
-                <td>{{ item.activeSubscription }}</td>
-                <td></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="row">
+            </div>
+          </b-col>
+        </b-row>
+        <!-- Подписки -->
+        <b-row>
+          <b-col>
+            <h4>Подписчики бота</h4>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Telegram ID</th>
+                  <th>E-mail ?</th>
+                  <th>Состояние подписки</th>
+                  <th>Дата активации</th>
+                  <th>Действительна до</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="item in subscribers"
+                  :key="item.chatId"
+                  :value="item.chatId"
+                >
+                  <td>{{ item.chatId }}</td>
+                  <td>{{ item.email }}</td>
+                  <td>
+                    {{ item.activeSubscription ? 'Активна' : 'Неактивна' }}
+                  </td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </b-col>
+        </b-row>
+        <!-- Область для показа ошибки -->
+        <b-row>
           <span class="errorText">{{ formError }}</span>
-        </div>
-        <!--<div class="row">-->
-        <b-form-group class="row">
-          <span>Текст рассылки</span>
-          <b-form-textarea
-            id="message"
-            v-model="messageText"
-            placeholder="Введите текст рассылки..."
-            rows="6"
-            max-rows="12"
-          ></b-form-textarea>
-        </b-form-group>
-        <div class="row">
-          <span class="sendMessageResult">{{ sendMessageResult }}</span>
-        </div>
-        <div class="float-right">
-          <b-button variant="outline-primary" @click="sendMessage"
-            >Разослать</b-button
-          >
-        </div>
+        </b-row>
 
         <!--</div>-->
-      </div>
-      <div class="col-1" />
-    </div>
-  </div>
+      </b-col>
+      <b-col cols="1" />
+    </b-row>
+  </b-container>
 </template>
 
 <script>

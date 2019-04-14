@@ -1,11 +1,16 @@
 // const request = require('request');
 const Bot = require('node-telegram-bot-api')
-const consola = require('consola')
+// const consola = require('consola')
 const util = require('./util')
 const CACHE = require('./cache')
-const wizard = require('./wizard')
+const Wizard = require('./wizard')
 
-let bot_today, sent_message_log_length, wizardApi
+const logger = require('./logger')
+const settings = require('./config')
+
+const models = require('./db/models')
+
+let sent_message_log_length, wizardApi
 
 const bots = {}
 
@@ -13,12 +18,16 @@ function cropSentMessage(message) {
   return `${message.substr(0, sent_message_log_length)}...`
 }
 
-// function answerCallbackQueryToday(query_id, text) {
-//   bot.answerCallbackQuery(query_id, { text: text, show_alert: true } );
-// };
+function parseBotCodeToken(codeToken) {
+  const codeTokenArr = codeToken.split('^')
+  const code = codeTokenArr[0]
+  const token = codeTokenArr[1]
 
-const telegram = function(settings, logger, set_webhooks = false) {
-  const today_token = settings.get('credentials.telegram_bot.api_token')
+  return { code, token }
+}
+
+const Telegram = function(settings, logger, set_webhooks = false) {
+  // const today_token = settings.get('credentials.telegram_bot.api_token')
   const api_tokens = settings.get('credentials.telegram_bot.api_tokens')
   const message_prepender = settings.get('debug.message_prepender')
   const application_name = settings.get('application_name')
@@ -91,7 +100,6 @@ const telegram = function(settings, logger, set_webhooks = false) {
     })
 
     // bot_today.onText(/\/start|\/info/, this.initialInstructionsHandler);
-
     bot.onText(/ОПЛАТИТЬ ПОДПИСКУ/, (msg, match) => {
       const chatId = msg.chat.id
 
@@ -168,31 +176,33 @@ const telegram = function(settings, logger, set_webhooks = false) {
 
   // bot_today = new Bot(today_token, { polling: false });
 
-  api_tokens.forEach(token => {
+  api_tokens.forEach(codeToken => {
+    const { code, token } = parseBotCodeToken(codeToken)
+
     if (is_production_env) {
-      // bot_today = new Bot(today_token);
-      bots[token] = new Bot(token)
+      bots[code] = new Bot(token)
     } else {
-      // bot_today = new Bot(today_token, { polling: true });
-      bots[token] = new Bot(token, { polling: true })
+      bots[code] = new Bot(token, { polling: true })
     }
-    bots[token].token = token
-    console.log('bot initialized', token)
+    bots[code].token = token
+    bots[code].code = code
+    console.log('bot initialized', code, token)
   })
 
-  console.log(Object.getOwnPropertyNames(bots))
+  // console.log(Object.getOwnPropertyNames(bots))
 
-  wizardApi = new wizard(CACHE, bots)
+  wizardApi = new Wizard(CACHE, bots)
   sent_message_log_length = settings.get('debug.sent_message_log_length')
 
   if (application_name && set_webhooks) {
     if (is_production_env) {
       // TODO: move webhooks initialization to explicit routine to be run consequently
       // before login
-      const parent = this
-      api_tokens.forEach(token => {
-        logger.warn(`Setting bot webhook, token: ${token}`)
-        const bot = bots[token]
+      api_tokens.forEach(codeToken => {
+        const { code, token } = parseBotCodeToken(codeToken)
+
+        logger.warn(`Setting bot webhook, code: ${code}`)
+        const bot = bots[code]
         bot
           .setWebHook(`https://${application_name}.herokuapp.com/${token}`)
           .then(() => logger.warn('Setting bot webhook - DONE'))
@@ -201,30 +211,24 @@ const telegram = function(settings, logger, set_webhooks = false) {
           .catch(error => logger.error(error.message))
       })
     } else {
-      api_tokens.forEach(token => {
-        const bot = bots[token]
+      api_tokens.forEach(codeToken => {
+        const { code } = parseBotCodeToken(codeToken)
+        const bot = bots[code]
         this.setCommands(bot)
       })
     }
   }
   if (!application_name) logger.error('Параметр application_name не установлен')
 
+  this.parseBotCodeToken = parseBotCodeToken
+
   this.mapGetUpdatesElement = function(elem) {
     logger.debug('mapGetUpdatesElement', elem)
     return elem.message.chat.id
   }
 
-  // this.answerCallbackQuery = function(query_id, text, bot = 'today') {
-  //   if (bot === 'today') {
-  //     answerCallbackQueryToday(query_id, text);
-  //   }
-  //   else {
-  //     answerCallbackQueryTomorrow(query_id, text);
-  //   }
-  // };
-
-  this.processUpdate = function(message, token) {
-    bots[token].processUpdate(message)
+  this.processUpdate = function(message, code) {
+    bots[code].processUpdate(message)
   }
 
   // TODO
@@ -234,33 +238,34 @@ const telegram = function(settings, logger, set_webhooks = false) {
       .map(chat_id => chat_id.toString().trim())
   }
 
-  // TODO: rollback save to history if send failed
   this.sendMessageToSubscriber = function(
     chat_id,
     text,
     reply_markup_options,
-    token
+    code
   ) {
     const sanitized_chat_id = parseInt(chat_id, 10)
     if (isNaN(sanitized_chat_id)) {
       logger.error('chat_id is empty')
+      return new Promise((resolve, reject) => {})
     }
-    const sanitized_text = util.sanitizeText(
-      `${message_prepender}${text}`.trim()
-    )
-    // let delay = this.getDelayBetweenRequests();
-    // let url = `https://api.telegram.org/bot${api_token}/sendMessage?chat_id=${chat_id}&text=${encoded_text}`;
+
+    let sanitizedText
+    if (message_prepender) {
+      sanitizedText = `${message_prepender}\n${text}`.trim()
+    } else {
+      sanitizedText = text.trim()
+    }
     logger.info(
-      `sendMessageToSubscriber. chat_id: ${sanitized_chat_id}, text: ${sanitized_text}, token: ${token}`
+      `sendMessageToSubscriber. chat_id: ${sanitized_chat_id}, text: ${sanitizedText}, code: ${code}`
     )
 
-    // return bot_today
-    return bots[token]
-      .sendMessage(sanitized_chat_id, sanitized_text, reply_markup_options)
+    return bots[code]
+      .sendMessage(sanitized_chat_id, sanitizedText, reply_markup_options)
       .then(message => {
         logger.warn(
           `sendMessageToSubscriber. SEND! chat_id: ${sanitized_chat_id}, text: ${cropSentMessage(
-            sanitized_text
+            sanitizedText
           )}`
         )
         logger.debug(message)
@@ -268,85 +273,30 @@ const telegram = function(settings, logger, set_webhooks = false) {
       })
   }
 
-  this.editSubscriberMessageForBot = function(
-    chat_id,
-    message_id,
-    reply_markup,
-    bot
+  // HINT: not async function
+  this.sendToTelegram = function(
+    text,
+    reply_markup_options,
+    botCode,
+    whereClause = {}
   ) {
-    const sanitized_chat_id = parseInt(chat_id, 10)
-    if (isNaN(sanitized_chat_id)) {
-      logger.error('chat_id is empty')
-    }
-
-    const options = {
-      chat_id: chat_id,
-      message_id: message_id
-    }
-    logger.warn(
-      `editSubscriberMessageForBot. bot_id: ${
-        bot.id
-      }, chat_id: ${sanitized_chat_id}, message_id: ${message_id}`
-    )
-    return bot.editMessageReplyMarkup(reply_markup, options)
-  }
-
-  // this.editSubscriberMessage = function (chat_id, message_id, reply_markup_options) {
-  //   return this.editSubscriberMessageForBot(chat_id, message_id, reply_markup_options, bot_today);
-  // };
-
-  this.sendToTelegram = async function(text, reply_markup_options, token) {
-    const chat_ids = this.getChatIds()
-    const sent_messages = {}
-    if (chat_ids && chat_ids.length > 0) {
-      logger.warn(`sendToTelegram. destination chat_ids: ${chat_ids}`)
-      // TODO: how to avoid this context hoisting?
-      const parent = this
-      await util.asyncForEach(chat_ids, async function(i, chat_id) {
-        await parent
-          .sendMessageToSubscriber(chat_id, text, reply_markup_options, token)
-          .then(message => (sent_messages[chat_id] = message.message_id))
-        await util.sleep(parent.getDelayBetweenRequests())
-      })
-    }
-    return sent_messages
-  }
-
-  // TODO: rename 'Telegram' functions
-  this.editMessagesInTelegramForBot = async function(
-    sent_messages,
-    reply_markup,
-    bot
-  ) {
-    const chat_ids = Object.getOwnPropertyNames(sent_messages)
-    if (chat_ids && chat_ids.length > 0) {
-      logger.info(
-        `editMessagesInTelegramForBot. destination chat_ids: ${chat_ids}`
+    const parent = this
+    const processor = async function(subscriber) {
+      await parent.sendMessageToSubscriber(
+        subscriber.chatId,
+        text,
+        reply_markup_options,
+        botCode
       )
-      const parent = this
-      await util.asyncForEach(chat_ids, async (i, chat_id) => {
-        const message_id = sent_messages[chat_id]
-        parent
-          .editSubscriberMessageForBot(chat_id, message_id, reply_markup, bot)
-          .catch(error => {
-            logger.warn(
-              `editMessagesInTelegramForBot. chat_id: ${chat_id}, message_id: ${message_id}, ERROR: ${
-                error.message
-              }`
-            )
-          })
-        await util.sleep(parent.getDelayBetweenRequests())
-      })
+      await util.sleep(parent.getDelayBetweenRequests())
     }
+
+    this.processSubscribersInBatches(botCode, processor, whereClause)
   }
 
-  // this.editMessagesInTelegram = function (sent_messages, reply_markup) {
-  //   return this.editMessagesInTelegramForBot(sent_messages, reply_markup, bot_today);
-  // };
-
-  this.getApiToken = function(settings) {
-    return settings.get('credentials.telegram_bot.today.api_token')
-  }
+  // this.getApiToken = function(settings) {
+  //   return settings.get('credentials.telegram_bot.today.api_token')
+  // }
 
   this.getDelayBetweenRequests = function() {
     return settings.get('credentials.telegram_bot.delay_between_requests')
@@ -370,9 +320,30 @@ const telegram = function(settings, logger, set_webhooks = false) {
     }
   }
 
+  this.processSubscribersInBatches = async function(
+    botCode,
+    subscriberProcessor,
+    whereClause = {},
+    batchSize = 100
+  ) {
+    const bot = await models.Bot.findOne({ where: { code: botCode } })
+    // HINT: aware of parameter mutation
+    whereClause.bot_id = bot.id
+    // console.log(bot.id, bot.code)
+    // bot.subscribers.forEach((subscriber) => console.log(subscriber.email))
+    for await (const subscribers of models.Subscriber.batch({
+      where: whereClause,
+      batchSize: batchSize
+    })) {
+      for (const subscriber of subscribers) {
+        await subscriberProcessor(subscriber)
+      }
+    }
+  }
+
   // this.getTodayBot = function() {
   //   return bot_today;
   // };
 }
 
-module.exports = telegram
+module.exports = new Telegram(settings, logger, true)

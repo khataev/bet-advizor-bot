@@ -1,9 +1,9 @@
 'use strict'
 const models = require('./../models')
+const User = models.User
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    const User = models.User
     const user1 = User.build({
       email: 'demo@example.com',
       name: 'Demo User',

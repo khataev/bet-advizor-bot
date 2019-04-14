@@ -9,11 +9,9 @@ const passport = require('passport')
 const constants = require('../plugins/constants')
 const logger = require('../plugins/logger')
 const settings = require('../plugins/config')
-const telegram = require('../plugins/telegram')
+const telegramApi = require('../plugins/telegram')
 const util = require('../plugins/util')
 const packageInfo = require('../package.json')
-
-const telegramApi = new telegram(settings, logger, true)
 
 // Import and Set Nuxt.js options
 const config = require('../nuxt.config.js')
@@ -59,10 +57,12 @@ async function start() {
     res.json({ version: packageInfo.version })
   })
 
-  api_tokens.forEach(token => {
+  api_tokens.forEach(codeToken => {
+    const { code, token } = telegramApi.parseBotCodeToken(codeToken)
+
     app.post(`/${token}`, function(req, res) {
       logger.debug(req.body)
-      telegramApi.processUpdate(req.body, token)
+      telegramApi.processUpdate(req.body, code)
       res.sendStatus(200)
     })
 

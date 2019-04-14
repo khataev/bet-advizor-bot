@@ -10,6 +10,8 @@ module.exports = (sequelize, DataTypes) => {
   )
   Bot.associate = function(models) {
     // associations can be defined here
+    // TODO: finish
+    Bot.hasMany(models.Subscriber, { foreignKey: 'bot_id' })
   }
   return Bot
 }

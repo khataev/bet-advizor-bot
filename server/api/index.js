@@ -3,6 +3,9 @@ import express from 'express'
 const models = require('./../../plugins/db/models')
 const Bot = models.Bot
 const User = models.User
+const Subscriber = models.Subscriber
+
+const telegramApi = require('./../../plugins/telegram')
 
 // Create express router
 const router = express.Router()
@@ -40,14 +43,45 @@ router.post('/logout', (req, res) => {
   res.json({ ok: true })
 })
 
+// TODO: SECURE endpoints
 router.get('/bots', (req, res) => {
   // res.json([{ value: 'ruha_bot', name: 'Ruha Stavit BOT' }])
   Bot.findAll().then(bots => {
     const botOptions = bots.map(bot => {
-      return { code: bot.code, name: bot.name }
+      return { id: bot.id, code: bot.code, name: bot.name }
     })
     res.json(botOptions)
   })
+})
+
+router.get('/bots/:botId/subscribers', (req, res) => {
+  const botId = req.params.botId
+  if (!botId) return res.json({})
+
+  Subscriber.findAll({ where: { botId: botId } }).then(subscribers => {
+    res.json(
+      subscribers.map(item => {
+        return {
+          email: item.email,
+          chatId: item.chatId,
+          activeSubscription: item.activeSubscription
+        }
+      })
+    )
+  })
+})
+
+router.post('/send_message', (req, res) => {
+  const { botCode, messageText } = req.body
+  if (!messageText) return
+
+  try {
+    telegramApi.sendToTelegram(messageText, {}, botCode)
+    res.json({ ok: true, message: 'SUCCESS' })
+  } catch (e) {
+    console.log(e.message)
+    res.json({ ok: false, message: 'FAILURE', error_message: e.message })
+  }
 })
 
 // Export the server middleware

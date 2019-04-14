@@ -1,4 +1,7 @@
 import express from 'express'
+
+const logger = require('./../../plugins/logger')
+
 // TODO: how to alias models without relative path?
 const models = require('./../../plugins/db/models')
 const Bot = models.Bot
@@ -56,9 +59,19 @@ router.get('/bots', (req, res) => {
 
 router.get('/bots/:botId/subscribers', (req, res) => {
   const botId = req.params.botId
+  let { page, limit } = req.query
+  page = page || 1
+  limit = limit || 10
+  const offset = (page - 1) * limit
+  logger.debug(`page, ${page}, limit, ${limit}`)
   if (!botId) return res.json({})
 
-  Subscriber.findAll({ where: { botId: botId } }).then(subscribers => {
+  Subscriber.findAll({
+    where: { botId: botId },
+    order: [['createdAt', 'asc']],
+    offset: offset,
+    limit: limit
+  }).then(subscribers => {
     res.json(
       subscribers.map(item => {
         return {

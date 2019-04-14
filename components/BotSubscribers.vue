@@ -1,27 +1,11 @@
 <template>
   <div>
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Telegram ID</th>
-          <th>E-mail ?</th>
-          <th>Состояние подписки</th>
-          <th>Дата активации</th>
-          <th>Действительна до</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in items" :key="item.chatId" :value="item.chatId">
-          <td>{{ item.chatId }}</td>
-          <td>{{ item.email }}</td>
-          <td>
-            {{ item.activeSubscription ? 'Активна' : 'Неактивна' }}
-          </td>
-          <td></td>
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
+    <b-table bordered striped hover :items="items" :fields="fields">
+      <!-- A custom formatted column -->
+      <template slot="subscriptionStatus" slot-scope="data">
+        {{ data.item.activeSubscription ? 'Активна' : 'Неактивна' }}
+      </template>
+    </b-table>
   </div>
 </template>
 
@@ -32,6 +16,32 @@ export default {
       type: Array,
       default() {
         return []
+      }
+    }
+  },
+  data() {
+    return {
+      fields: {
+        chatId: {
+          label: 'Telegram ID',
+          sortable: true
+        },
+        email: {
+          label: 'Email',
+          sortable: false
+        },
+        subscriptionStatus: {
+          label: 'Состояние подписки',
+          sortable: false
+        },
+        activationDate: {
+          label: 'Дата активации',
+          sortable: false
+        },
+        deactivationDate: {
+          label: 'Действительна до',
+          sortable: false
+        }
       }
     }
   }

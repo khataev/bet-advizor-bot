@@ -68,6 +68,17 @@ router.get('/bots/:botId/subscribers', (req, res) => {
 
   Subscriber.findAll({
     where: { botId: botId },
+    attributes: [
+      [models.sequelize.fn('COUNT', models.sequelize.col('*')), 'cnt']
+    ],
+    raw: true
+  }).then(rows => {
+    res.set('x-total-count', rows[0].cnt)
+    res.set('x-per-page', limit)
+  })
+
+  Subscriber.findAll({
+    where: { botId: botId },
     order: [['createdAt', 'asc']],
     offset: offset,
     limit: limit
@@ -85,11 +96,15 @@ router.get('/bots/:botId/subscribers', (req, res) => {
 })
 
 router.post('/send_message', (req, res) => {
-  const { botCode, messageText } = req.body
+  const { botCode, messageText, onlyActive } = req.body
+  const whereClause = {}
   if (!messageText) return
 
   try {
-    telegramApi.sendToTelegram(messageText, {}, botCode)
+    if (onlyActive) {
+      whereClause.activeSubscription = true
+    }
+    telegramApi.sendToTelegram(messageText, {}, botCode, whereClause)
     res.json({ ok: true, message: 'SUCCESS' })
   } catch (e) {
     console.log(e.message)

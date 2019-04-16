@@ -59,7 +59,13 @@
         </b-row>
         <b-row>
           <b-col>
-            <BotSubscribers :items="subscribers"></BotSubscribers>
+            <BotSubscribers
+              :items="subscribers"
+              :current-page="currentPage"
+              :per-page="perPage"
+              :total-items="totalItems"
+              @current-page-updated="currentPageUpdated"
+            />
           </b-col>
         </b-row>
         <!-- Область для показа ошибки -->
@@ -80,13 +86,19 @@ import axios from 'axios'
 import BotSubscribers from '~/components/BotSubscribers.vue'
 
 export default {
+  components: {
+    BotSubscribers
+  },
   // TODO: return
-  // middleware: 'authenticated',
+  middleware: 'authenticated',
   data() {
     return {
       selectedBotId: 'choose_value',
       botOptions: [],
       subscribers: [],
+      currentPage: 1,
+      perPage: 10,
+      totalItems: 0,
       messageText: '',
       sendMessageResult: '',
       formError: null
@@ -108,19 +120,29 @@ export default {
           this.formError = error.message
         })
     },
-    fetchSubscribers: function(botId) {
+    fetchSubscribers: function(botId, page = 1, limit = 10) {
       axios
-        .get(`/api/bots/${botId}/subscribers`)
-        .then(response => (this.subscribers = response.data))
+        .get(`/api/bots/${botId}/subscribers`, {
+          params: { page: page, limit: limit }
+        })
+        .then(response => {
+          // TODO: totalItems and subscribers should be fetched separately
+          this.totalItems = parseInt(response.headers['x-total-count'], 10)
+          this.subscribers = response.data
+        })
         .catch(error => {
           this.formError = error.message
         })
+    },
+    currentPageUpdated: function(newCurrentPage) {
+      this.fetchSubscribers(this.selectedBotId, newCurrentPage)
     },
     sendMessage: function() {
       this.sendMessageResult = ''
       axios
         .post('/api/send_message', {
           botCode: this.getBotCode(this.selectedBotId),
+          onlyActive: true,
           messageText: this.messageText
         })
         .then(response => (this.sendMessageResult = response.data.message))
@@ -133,9 +155,6 @@ export default {
       const bot = this.botOptions.find(element => element.id == botId)
       return bot.code
     }
-  },
-  components: {
-    BotSubscribers
   }
 }
 </script>

@@ -7,6 +7,7 @@ const models = require('./../../plugins/db/models')
 const Bot = models.Bot
 const User = models.User
 const Subscriber = models.Subscriber
+const Op = models.Sequelize.Op
 
 const telegramApi = require('./../../plugins/telegram')
 
@@ -88,7 +89,7 @@ router.get('/bots/:botId/subscribers', (req, res) => {
         return {
           email: item.email,
           chatId: item.chatId,
-          activeSubscription: item.activeSubscription
+          activeSubscription: item.activeSubscription()
         }
       })
     )
@@ -102,7 +103,7 @@ router.post('/send_message', (req, res) => {
 
   try {
     if (onlyActive) {
-      whereClause.activeSubscription = true
+      whereClause.currentValidTill = { [Op.gte]: new Date() }
     }
     telegramApi.sendToTelegram(messageText, {}, botCode, whereClause)
     res.json({ ok: true, message: 'SUCCESS' })

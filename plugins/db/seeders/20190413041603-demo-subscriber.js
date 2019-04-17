@@ -1,6 +1,6 @@
 'use strict'
-const util = require('./../../util')
 const models = require('./../models')
+const util = require('./../../util')
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
@@ -11,8 +11,8 @@ module.exports = {
       const subscriber1 = models.Subscriber.build({
         botId: bot.id,
         email: 'khataev@yandex.ru',
-        chatId: 176212258,
-        activeSubscription: true
+        chatId: 176212258
+        // activeSubscription: true
       })
       await subscriber1.save()
 
@@ -20,18 +20,18 @@ module.exports = {
       const subscriber2 = models.Subscriber.build({
         botId: bot.id,
         email: 'alex.korinenko@list.ru',
-        chatId: 556745162,
-        activeSubscription: true
+        chatId: 556745162
+        // activeSubscription: true
       })
       await subscriber2.save()
 
       // HINT: dummy subscribers for pagination
-      await util.asyncForEach(subscribers, async i => {
+      return util.asyncForEach(subscribers, async i => {
         const dummySubscriber = models.Subscriber.build({
           botId: bot.id,
           email: `subscriber-${i + 1 + bot.id * 100}@mail.ru`,
-          chatId: 176212258 + i + 1 + bot.id * 100,
-          activeSubscription: false
+          chatId: 176212258 + i + 1 + bot.id * 100
+          // activeSubscription: false
         })
         await dummySubscriber.save()
       })

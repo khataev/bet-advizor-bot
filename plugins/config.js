@@ -78,6 +78,22 @@ const config = convict({
         default: [],
         env: 'CREDENTIALS_TELEGRAM_BOT_CHAT_IDS'
       }
+    },
+    casepay: {
+      merchant: {
+        sci_id: {
+          doc: 'merchant id',
+          format: 'int',
+          default: '',
+          env: 'CASEPAY_MERCHANT_SCI_ID'
+        },
+        sci_key: {
+          doc: 'merchant secret key',
+          format: String,
+          default: '',
+          env: 'CASEPAY_MERCHANT_SCI_KEY'
+        }
+      }
     }
   },
   debug: {

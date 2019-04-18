@@ -103,8 +103,8 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     bot.onText(/ОПЛАТИТЬ ПОДПИСКУ/, (msg, match) => {
       const chatId = msg.chat.id
 
-      wizardApi.startPayWizard(chatId, bot.token)
-      wizardApi.handlePayWizardStep(chatId, bot.token)
+      wizardApi.startPayWizard(chatId, bot.code)
+      wizardApi.handlePayWizardStep(chatId, bot.code)
     })
 
     bot.onText(/ОСТАЛИСЬ ВОПРОСЫ/, (msg, match) => {
@@ -148,9 +148,9 @@ const Telegram = function(settings, logger, set_webhooks = false) {
 
       if (msg.text.search(/ОПЛАТИТЬ ПОДПИСКУ|ОСТАЛИСЬ ВОПРОСЫ/) >= 0) return
 
-      if (wizardApi.payWizardStarted(chat_id)) {
-        const wizard = wizardApi.getPayWizard(chat_id, bot.token)
-        wizardApi.handlePayWizardStep(chat_id, bot.token, msg.text)
+      if (wizardApi.payWizardStarted(chat_id, bot.code)) {
+        const wizard = wizardApi.getPayWizard(chat_id, bot.code)
+        wizardApi.handlePayWizardStep(chat_id, bot.code, msg.text)
       } else {
         bot.sendMessage(
           msg.chat.id,
@@ -163,9 +163,9 @@ const Telegram = function(settings, logger, set_webhooks = false) {
       // console.log('callback message', msg);
       const chat_id = msg.message.chat.id
 
-      if (msg.data == 'pay_subscription') {
-        wizardApi.startPayWizard(chat_id, bot.token)
-        wizardApi.handlePayWizardStep(chat_id, bot.token)
+      if (msg.data === 'pay_subscription') {
+        wizardApi.startPayWizard(chat_id, bot.code)
+        wizardApi.handlePayWizardStep(chat_id, bot.code)
       }
     })
 

@@ -35,20 +35,47 @@ const wizard = function(cache_param, bots_param, telegram_api_param) {
         bots[code].sendMessage(chat_id, options)
         this.gotoNextStep(wizard)
         break
+      // case 1:
+      //   bots[code].sendMessage(
+      //     chat_id,
+      //     'Введите правильный e-mail\n' + '(Пример: user@yandex.ru)'
+      //   )
+      //   this.gotoNextStep(wizard)
+      //   break
       case 1:
-        bots[code].sendMessage(
-          chat_id,
-          'Введите правильный e-mail\n' + '(Пример: user@yandex.ru)'
-        )
+        bots[code].sendMessage(chat_id, 'Выберите спопсоб оплаты', {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: 'С Яндекс кошелека',
+                  callback_data: PaymentMethods.YANDEX_PAYMENT_METHOD
+                }
+              ],
+              [
+                {
+                  text: 'С карты',
+                  callback_data: PaymentMethods.CARD_PAYMENT_METHOD
+                }
+              ]
+            ]
+          }
+        })
         this.gotoNextStep(wizard)
-        // console.log(wizard.step, this.getPayWizard(chat_id, code).step)
         break
       case 2:
         if (!options) break
 
         try {
-          // TODO: move email check to method
-          if (options.search(/\w+@\w+\.\w{2,}/) === -1) {
+          // // TODO: move email check to method
+          // if (options.search(/\w+@\w+\.\w{2,}/) === -1) {
+          //   this.gotoPrevStep(wizard)
+          //   this.handlePayWizardStep(chat_id, code)
+          // TODO: refactor this long code into shoer methods
+          if (
+            options !== PaymentMethods.YANDEX_PAYMENT_METHOD &&
+            options !== PaymentMethods.CARD_PAYMENT_METHOD
+          ) {
             this.gotoPrevStep(wizard)
             this.handlePayWizardStep(chat_id, code)
           } else {
@@ -68,7 +95,7 @@ const wizard = function(cache_param, bots_param, telegram_api_param) {
               amount
             )
             const params = {
-              pscur: PaymentMethods.YANDEX_PAYMENT_METHOD,
+              pscur: options,
               amount: amount,
               order_id: payment.id,
               comment: `order ${payment.id} comment`

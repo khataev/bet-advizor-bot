@@ -4,11 +4,11 @@ const Bot = require('node-telegram-bot-api')
 const util = require('./util')
 const CACHE = require('./cache')
 const Wizard = require('./wizard')
-
 const logger = require('./logger')
 const settings = require('./config')
-
 const models = require('./db/models')
+
+const { PaymentMethods } = require('./casepay')
 
 let sent_message_log_length, wizardApi
 
@@ -163,9 +163,17 @@ const Telegram = function(settings, logger, set_webhooks = false) {
       // console.log('callback message', msg);
       const chat_id = msg.message.chat.id
 
+      // TODO: introduce ACTION and its PARAMS for callback
       if (msg.data === 'pay_subscription') {
         wizardApi.startPayWizard(chat_id, bot.code)
         wizardApi.handlePayWizardStep(chat_id, bot.code)
+      }
+
+      if (
+        msg.data === PaymentMethods.YANDEX_PAYMENT_METHOD ||
+        msg.data === PaymentMethods.CARD_PAYMENT_METHOD
+      ) {
+        wizardApi.handlePayWizardStep(chat_id, bot.code, msg.data)
       }
     })
 

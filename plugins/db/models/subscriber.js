@@ -3,6 +3,7 @@
 const { DateTime } = require('luxon')
 
 const logger = require('./../../logger')
+const settings = require('./../../config')
 
 module.exports = (sequelize, DataTypes) => {
   const Subscriber = sequelize.define(
@@ -24,11 +25,21 @@ module.exports = (sequelize, DataTypes) => {
     Subscriber.hasMany(models.Payment, { foreignKey: 'subscriber_id' })
   }
 
-  Subscriber.prototype.activeSubscription = function() {
+  Subscriber.prototype.isActiveSubscription = function() {
     return (
       !!this.getDataValue('currentValidTill') &&
       this.getDataValue('currentValidTill') >= DateTime.local()
     )
+  }
+
+  Subscriber.prototype.updatePaymentData = function() {
+    const subscriptionDuration = settings.get('subscription_duration')
+    const paidAt = DateTime.local()
+    const validTill = paidAt.plus({ months: subscriptionDuration })
+    return this.update({
+      currentPaidAt: paidAt.toJSDate(),
+      currentValidTill: validTill.toJSDate()
+    })
   }
 
   Subscriber.createNewOrder = async function(botId, chatId, amount) {

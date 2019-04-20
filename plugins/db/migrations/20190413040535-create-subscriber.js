@@ -25,9 +25,6 @@ module.exports = {
         chat_id: {
           type: Sequelize.INTEGER
         },
-        active_subscription: {
-          type: Sequelize.BOOLEAN
-        },
         createdAt: {
           allowNull: false,
           type: Sequelize.DATE

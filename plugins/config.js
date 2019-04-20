@@ -20,6 +20,12 @@ const config = convict({
     default: 0,
     env: 'SUBSCRIPTION_PRICE'
   },
+  subscription_duration: {
+    doc: 'Duration of subscription in months',
+    format: 'int',
+    default: 1,
+    env: 'SUBSCRIPTION_DURATION'
+  },
   db: {
     username: {
       doc: 'username',

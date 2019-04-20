@@ -11,22 +11,25 @@ module.exports = (sequelize, DataTypes) => {
     {}
   )
   Payment.associate = function(models) {
-    // associations can be defined here
+    Payment.belongsTo(models.Subscriber, { foreignKey: 'subscriber_id' })
   }
 
-  Payment.updatePrivateHash = function(orderId, privateHash) {
-    return this.update(
-      {
-        privateHash: privateHash
-      },
-      {
-        where: {
-          id: {
-            [sequelize.Sequelize.Op.eq]: orderId
-          }
+  Payment.confirmPayment = async function(orderId, privateHash) {
+    const payment = await Payment.findOne({
+      where: {
+        id: {
+          [sequelize.Sequelize.Op.eq]: orderId
         }
       }
-    )
+    })
+    if (payment) {
+      return Payment.sequelize.transaction({}, async transaction => {
+        await payment.update({ privateHash: privateHash })
+        return (await payment.getSubscriber()).updatePaymentData()
+      })
+    } else {
+      throw new Error(`Payment with id=${orderId} not found`)
+    }
   }
 
   return Payment

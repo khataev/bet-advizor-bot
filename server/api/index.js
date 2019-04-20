@@ -89,7 +89,7 @@ router.get('/bots/:botId/subscribers', (req, res) => {
         return {
           email: item.email,
           chatId: item.chatId,
-          activeSubscription: item.activeSubscription()
+          activeSubscription: item.isActiveSubscription()
         }
       })
     )

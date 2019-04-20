@@ -74,9 +74,20 @@ async function start() {
       logger.debug(req.body)
 
       const { private_hash: privateHash, order_id: orderId } = req.body
-      await models.Payment.updatePrivateHash(orderId, privateHash)
-
-      res.sendStatus(200)
+      if (privateHash && orderId) {
+        try {
+          await models.Payment.confirmPayment(orderId, privateHash)
+          res.sendStatus(200)
+        } catch (error) {
+          logger.error(`/${token}/handler. ${error.message}`)
+          res.sendStatus(422)
+        }
+      } else {
+        logger.error(
+          `/${token}/handler. invalid private hash: ${privateHash} or order id: ${orderId}`
+        )
+        res.sendStatus(400)
+      }
     })
 
     app.get(`/${token}/success`, function(req, res) {

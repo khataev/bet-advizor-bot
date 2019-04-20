@@ -39,7 +39,7 @@ module.exports = {
       })
       .then(() =>
         queryInterface.addIndex('Subscribers', ['bot_id', 'email'], {
-          unique: true
+          unique: false
         })
       )
       .then(() =>

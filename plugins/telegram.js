@@ -174,51 +174,7 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     })
   }
 
-  // bot_today = new Bot(today_token, { polling: false });
-
-  api_tokens.forEach(codeToken => {
-    const { code, token } = parseBotCodeToken(codeToken)
-
-    if (is_production_env) {
-      bots[code] = new Bot(token)
-    } else {
-      bots[code] = new Bot(token, { polling: true })
-    }
-    bots[code].token = token
-    bots[code].code = code
-    console.log('bot initialized', code, token)
-  })
-
   // console.log(Object.getOwnPropertyNames(bots))
-
-  wizardApi = new Wizard(CACHE, bots)
-  sent_message_log_length = settings.get('debug.sent_message_log_length')
-
-  if (application_name && set_webhooks) {
-    if (is_production_env) {
-      // TODO: move webhooks initialization to explicit routine to be run consequently
-      // before login
-      api_tokens.forEach(codeToken => {
-        const { code, token } = parseBotCodeToken(codeToken)
-
-        logger.warn(`Setting bot webhook, code: ${code}`)
-        const bot = bots[code]
-        bot
-          .setWebHook(`https://${application_name}.herokuapp.com/${token}`)
-          .then(() => logger.warn('Setting bot webhook - DONE'))
-          .then(() => logger.warn('Telegram webhooks initialization passed'))
-          .then(() => this.setCommands(bot))
-          .catch(error => logger.error(error.message))
-      })
-    } else {
-      api_tokens.forEach(codeToken => {
-        const { code } = parseBotCodeToken(codeToken)
-        const bot = bots[code]
-        this.setCommands(bot)
-      })
-    }
-  }
-  if (!application_name) logger.error('Параметр application_name не установлен')
 
   this.parseBotCodeToken = parseBotCodeToken
 
@@ -341,9 +297,82 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     }
   }
 
-  // this.getTodayBot = function() {
-  //   return bot_today;
-  // };
+  this.initializeBots = function() {
+    api_tokens.forEach(codeToken => {
+      const { code, token } = parseBotCodeToken(codeToken)
+
+      // TODO: replace with global context variable
+      if (is_production_env) {
+        bots[code] = new Bot(token)
+      } else {
+        bots[code] = new Bot(token, { polling: true })
+      }
+
+      bots[code].token = token
+      bots[code].code = code
+      console.log('bot initialized', code, token)
+    })
+
+    wizardApi = new Wizard(CACHE, bots, this)
+    sent_message_log_length = settings.get('debug.sent_message_log_length')
+
+    if (application_name && set_webhooks) {
+      if (is_production_env) {
+        // TODO: move webhooks initialization to explicit routine to be run consequently
+        // before login
+        api_tokens.forEach(codeToken => {
+          const { code, token } = parseBotCodeToken(codeToken)
+
+          logger.warn(`Setting bot webhook, code: ${code}`)
+          const bot = bots[code]
+          bot
+            .setWebHook(`https://${application_name}.herokuapp.com/${token}`)
+            .then(() => logger.warn('Setting bot webhook - DONE'))
+            .then(() => logger.warn('Telegram webhooks initialization passed'))
+            .then(() => this.setCommands(bot))
+            .catch(error => logger.error(error.message))
+        })
+      } else {
+        api_tokens.forEach(codeToken => {
+          const { code } = parseBotCodeToken(codeToken)
+          const bot = bots[code]
+          this.setCommands(bot)
+        })
+      }
+    }
+    if (!application_name)
+      logger.error('Параметр application_name не установлен')
+  }
+
+  this.syncBotsWithDb = function() {
+    const botCodes = Object.getOwnPropertyNames(bots)
+
+    return util.asyncForEach(botCodes, async (i, code) => {
+      const bot = bots[code]
+      logger.debug(`syncBotsWithDb. id was: ${bot.id}`)
+      if (bot.id) return
+
+      const dbBot = await models.Bot.findOne({ where: { code: code } })
+      if (bot) {
+        bot.id = dbBot.id
+        logger.info(
+          `syncBotsWithDb. Bot with code '${code}' found in database!`
+        )
+      } else {
+        logger.error(
+          `syncBotsWithDb. Bot with code '${code}' NOT found in database!`
+        )
+      }
+    })
+  }
+
+  this.initializeBots()
 }
+
+// async function init() {
+//   const telegram = new Telegram(settings, logger, true)
+//   telegram.initializeBots()
+//   return telegram
+// }
 
 module.exports = new Telegram(settings, logger, true)

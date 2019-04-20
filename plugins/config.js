@@ -14,6 +14,12 @@ const config = convict({
     default: '',
     env: 'APPLICATION_NAME'
   },
+  subscription_price: {
+    doc: 'Price for month of subscription',
+    format: 'int',
+    default: 0,
+    env: 'SUBSCRIPTION_PRICE'
+  },
   db: {
     username: {
       doc: 'username',

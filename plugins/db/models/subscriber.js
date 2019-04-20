@@ -2,6 +2,8 @@
 
 const { DateTime } = require('luxon')
 
+const logger = require('./../../logger')
+
 module.exports = (sequelize, DataTypes) => {
   const Subscriber = sequelize.define(
     'Subscriber',
@@ -19,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     {}
   )
   Subscriber.associate = function(models) {
-    // associations can be defined here
+    Subscriber.hasMany(models.Payment, { foreignKey: 'subscriber_id' })
   }
 
   Subscriber.prototype.activeSubscription = function() {
@@ -27,6 +29,31 @@ module.exports = (sequelize, DataTypes) => {
       !!this.getDataValue('currentValidTill') &&
       this.getDataValue('currentValidTill') >= DateTime.local()
     )
+  }
+
+  Subscriber.createNewOrder = async function(botId, chatId, amount) {
+    let subscriber = await Subscriber.findOne({
+      where: { botId: botId, chatId: chatId }
+    })
+
+    return Subscriber.sequelize
+      .transaction({}, async transaction => {
+        if (!subscriber)
+          subscriber = await Subscriber.create(
+            { botId: botId, chatId: chatId },
+            { transaction: transaction }
+          )
+
+        return subscriber.createPayment(
+          { amount: amount },
+          { transaction: transaction }
+        )
+      })
+      .then(payment => {
+        logger.debug(`Payment with id=${payment.id} created`)
+        return payment
+      })
+      .catch(error => logger.error(error))
   }
 
   return Subscriber

@@ -1,7 +1,8 @@
-const https = require('https')
-const querystring = require('querystring')
+const request = require('request-promise')
+// require('request-promise').debug = true
 
 const settings = require('./config')
+const logger = require('./logger')
 
 const sciId = settings.get('credentials.casepay.merchant.sci_id')
 const sciKey = settings.get('credentials.casepay.merchant.sci_key')
@@ -15,8 +16,13 @@ function mergeArray(array1, array2) {
   return array2
 }
 
-function defaultCallback(data) {
-  console.log(data)
+function parseJSONBody(data) {
+  return JSON.parse(data)
+}
+function logData(data) {
+  console.log('logData', data)
+
+  return data
 }
 
 function Casepay(sciId, sciKey) {
@@ -26,72 +32,65 @@ function Casepay(sciId, sciKey) {
   // this.test = test || false
 }
 Casepay.methods = ['sci_create_order', 'sci_confirm_order']
-Casepay.prototype.sendRequest = function(method, params, callback) {
+Casepay.prototype.sendRequest = function(method, params) {
   if (Casepay.methods.indexOf(method) === -1) {
     throw new Error('wrong method name ' + method)
   }
 
-  if (callback == null) {
-    // callback = params
-    callback = defaultCallback
-  }
-
   let data = {
     func: method,
-    sciId: this.sciId,
-    sciKey: this.sciKey
+    sci_id: this.sciId,
+    sci_key: this.sciKey
     // domain: this.domain,
     // test: this.test
   }
   data = mergeArray(params, data)
 
-  const requestParams = querystring.stringify(data)
-
   const options = {
-    host: 'casepay.online',
-    // host: 'postman-echo.com',
-    port: 443,
-    path: `/sci/0.1/index.php?${requestParams}`,
-    // path: `/post?${body}`,
     method: 'POST',
+    uri: 'https://casepay.online/sci/0.1/index.php',
+    // uri: 'https://postman-echo.com/post',
+    qs: data,
     headers: {
       'Content-Type': 'application/json'
     }
   }
 
-  const request = https.request(options, function(response) {
-    let result = ''
-    response.setEncoding('utf8')
-
-    response.on('data', function(chunk) {
-      result += chunk
-    })
-
-    // Listener for intializing callback after receiving complete response
-    response.on('end', function() {
-      try {
-        callback(JSON.parse(result))
-        // callback(result)
-      } catch (e) {
-        console.error(e)
-        callback(result)
+  return request(options)
+    .then(parseJSONBody)
+    .then(body => {
+      if (body.error) {
+        logger.error(body)
+        throw new Error(`Casepay error: ${body.message}`)
+      } else {
+        return {
+          error: body.error,
+          url: body.data.url,
+          hash: body.data.params.hash
+        }
       }
     })
-  })
-  request.end()
+    .then(logData)
+    .catch(error => {
+      return {
+        error: true,
+        message: error.message
+      }
+    })
 }
 
 for (let i = 0; i < Casepay.methods.length; i++) {
   Casepay.prototype[Casepay.methods[i]] = (function(method) {
-    return function(params, callback) {
-      this.sendRequest(method, params, callback)
+    return function(params) {
+      return this.sendRequest(method, params)
     }
   })(Casepay.methods[i])
 }
 
 module.exports = {
   casepay: new Casepay(sciId, sciKey),
-  payment_methods: {
+  // TODO: to lower case?
+  PAYMENT_METHODS: {
     CARD_PAYMENT_METHOD,
     YANDEX_PAYMENT_METHOD
   }

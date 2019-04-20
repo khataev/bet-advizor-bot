@@ -30,10 +30,10 @@
     "js-cookie": "^2.2.0",
     "luxon": "^1.12.1",
     "node-telegram-bot-api": "^0.30.0",
-    "nuxt": "^2.4.0",
+    "nuxt": "^2.6.2",
     "passport": "^0.4.0",
     "pg": "^7.9.0",
-    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
     "sequelize": "^5.2.12",
     "sequelize-cli": "^5.4.0",
     "vuex-persistedstate": "^2.5.4"

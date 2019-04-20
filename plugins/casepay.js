@@ -90,7 +90,7 @@ for (let i = 0; i < Casepay.methods.length; i++) {
 module.exports = {
   casepay: new Casepay(sciId, sciKey),
   // TODO: to lower case?
-  PAYMENT_METHODS: {
+  PaymentMethods: {
     CARD_PAYMENT_METHOD,
     YANDEX_PAYMENT_METHOD
   }

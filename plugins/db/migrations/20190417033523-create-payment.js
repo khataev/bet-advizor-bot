@@ -24,6 +24,9 @@ module.exports = {
       paid_at: {
         type: Sequelize.DATE
       },
+      private_hash: {
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

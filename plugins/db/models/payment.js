@@ -5,6 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       subscriberId: { field: 'subscriber_id', type: DataTypes.INTEGER },
       amount: DataTypes.INTEGER,
+      privateHash: { field: 'private_hash', type: DataTypes.STRING },
       paidAt: { field: 'paid_at', type: DataTypes.DATE }
     },
     {}
@@ -12,5 +13,21 @@ module.exports = (sequelize, DataTypes) => {
   Payment.associate = function(models) {
     // associations can be defined here
   }
+
+  Payment.updatePrivateHash = function(orderId, privateHash) {
+    return this.update(
+      {
+        privateHash: privateHash
+      },
+      {
+        where: {
+          id: {
+            [sequelize.Sequelize.Op.eq]: orderId
+          }
+        }
+      }
+    )
+  }
+
   return Payment
 }

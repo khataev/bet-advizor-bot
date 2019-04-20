@@ -1,7 +1,7 @@
 const settings = require('./config')
 const logger = require('./logger')
 const models = require('./db/models')
-const { casepay, PAYMENT_METHODS } = require('./casepay')
+const { casepay, PaymentMethods } = require('./casepay')
 
 // TODO: move to 'this' properties
 let cache, bots, telegramApi
@@ -68,7 +68,7 @@ const wizard = function(cache_param, bots_param, telegram_api_param) {
               amount
             )
             const params = {
-              pscur: PAYMENT_METHODS.YANDEX_PAYMENT_METHOD,
+              pscur: PaymentMethods.YANDEX_PAYMENT_METHOD,
               amount: amount,
               order_id: payment.id,
               comment: `order ${payment.id} comment`

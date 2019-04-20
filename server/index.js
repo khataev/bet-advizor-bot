@@ -11,6 +11,7 @@ const logger = require('../plugins/logger')
 const settings = require('../plugins/config')
 const telegramApi = require('../plugins/telegram')
 const util = require('../plugins/util')
+const models = require('../plugins/db/models')
 const packageInfo = require('../package.json')
 
 // Import and Set Nuxt.js options
@@ -68,9 +69,13 @@ async function start() {
       res.sendStatus(200)
     })
 
-    app.post(`/${token}/handler`, function(req, res) {
+    app.post(`/${token}/handler`, async function(req, res) {
       logger.debug('handler action')
       logger.debug(req.body)
+
+      const { private_hash: privateHash, order_id: orderId } = req.body
+      await models.Payment.updatePrivateHash(orderId, privateHash)
+
       res.sendStatus(200)
     })
 

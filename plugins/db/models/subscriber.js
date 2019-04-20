@@ -32,9 +32,8 @@ module.exports = (sequelize, DataTypes) => {
     )
   }
 
-  Subscriber.prototype.updatePaymentData = function() {
+  Subscriber.prototype.updatePaymentData = function(paidAt) {
     const subscriptionDuration = settings.get('subscription_duration')
-    const paidAt = DateTime.local()
     const validTill = paidAt.plus({ months: subscriptionDuration })
     return this.update({
       currentPaidAt: paidAt.toJSDate(),

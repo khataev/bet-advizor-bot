@@ -71,7 +71,7 @@ async function start() {
 
     app.post(`/${token}/handler`, async function(req, res) {
       logger.debug('handler action')
-      logger.debug(req.body)
+      console.dir(req.body)
 
       const { private_hash: privateHash, order_id: orderId } = req.body
       if (privateHash && orderId) {

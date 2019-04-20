@@ -1,4 +1,7 @@
 'use strict'
+
+const { DateTime } = require('luxon')
+
 module.exports = (sequelize, DataTypes) => {
   const Payment = sequelize.define(
     'Payment',
@@ -24,8 +27,12 @@ module.exports = (sequelize, DataTypes) => {
     })
     if (payment) {
       return Payment.sequelize.transaction({}, async transaction => {
-        await payment.update({ privateHash: privateHash })
-        return (await payment.getSubscriber()).updatePaymentData()
+        const paidAt = DateTime.local()
+        await payment.update({
+          privateHash: privateHash,
+          paidAt: paidAt.toJSDate()
+        })
+        return (await payment.getSubscriber()).updatePaymentData(paidAt)
       })
     } else {
       throw new Error(`Payment with id=${orderId} not found`)

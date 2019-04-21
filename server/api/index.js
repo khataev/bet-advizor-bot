@@ -1,8 +1,8 @@
 // TODO: what is the diff with require?
 import express from 'express'
-
 const { DateTime } = require('luxon')
 
+const config = require('../../nuxt.config.js')
 const logger = require('./../../plugins/logger')
 
 // TODO: how to alias models without relative path?
@@ -18,6 +18,9 @@ const telegramApi = require('./../../plugins/telegram')
 const router = express.Router()
 
 function invalidSession(session) {
+  // HINT: turned off in development
+  if (config.dev) return false
+
   if (!session) return true
   const expired = session.cookie.expires
     ? DateTime.fromJSDate(session.cookie.expires) < DateTime.local()

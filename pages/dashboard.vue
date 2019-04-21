@@ -45,7 +45,10 @@
             </b-form-group>
             <span class="sendMessageResult">{{ sendMessageResult }}</span>
             <div class="float-right">
-              <b-button variant="outline-primary" @click="sendMessage"
+              <b-button
+                variant="outline-primary"
+                :disabled="sendMessageDisabled"
+                @click="sendMessage"
                 >Разослать</b-button
               >
             </div>
@@ -89,7 +92,6 @@ export default {
   components: {
     BotSubscribers
   },
-  // TODO: return
   middleware: 'authenticated',
   data() {
     return {
@@ -102,6 +104,11 @@ export default {
       messageText: '',
       sendMessageResult: '',
       formError: null
+    }
+  },
+  computed: {
+    sendMessageDisabled: function() {
+      return this.selectedBotId === 'choose_value' || this.messageText === ''
     }
   },
   beforeMount() {

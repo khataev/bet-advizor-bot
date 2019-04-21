@@ -1,4 +1,7 @@
+// TODO: what is the diff with require?
 import express from 'express'
+
+const { DateTime } = require('luxon')
 
 const logger = require('./../../plugins/logger')
 
@@ -13,6 +16,15 @@ const telegramApi = require('./../../plugins/telegram')
 
 // Create express router
 const router = express.Router()
+
+function invalidSession(session) {
+  if (!session) return true
+  const expired = session.cookie.expires
+    ? DateTime.fromJSDate(session.cookie.expires) < DateTime.local()
+    : false
+
+  return expired || !session.authUser
+}
 
 // Transform req & res to have the same API as express
 // So we can use res.status() & res.json()
@@ -32,6 +44,9 @@ router.post('/login', (req, res) => {
       if (user && user.verifyPassword(req.body.password)) {
         const authUser = { email: user.email, name: user.name }
         req.session.authUser = authUser
+        req.session.cookie.expires = DateTime.local()
+          .plus({ hours: 12 })
+          .toJSDate()
         return res.json(authUser)
       } else {
         res.status(401).json({ message: 'Bad credentials' })
@@ -42,13 +57,14 @@ router.post('/login', (req, res) => {
 
 // Add POST - /api/logout
 router.post('/logout', (req, res) => {
-  delete req.session.authUser
-  // req.session.destroy()
+  // delete req.session.authUser
+  req.session.destroy()
   res.json({ ok: true })
 })
 
-// TODO: SECURE endpoints
 router.get('/bots', (req, res) => {
+  if (invalidSession(req.session)) return res.sendStatus(401)
+
   // res.json([{ value: 'ruha_bot', name: 'Ruha Stavit BOT' }])
   Bot.findAll().then(bots => {
     const botOptions = bots.map(bot => {
@@ -59,6 +75,8 @@ router.get('/bots', (req, res) => {
 })
 
 router.get('/bots/:botId/subscribers', (req, res) => {
+  if (invalidSession(req.session)) return res.sendStatus(401)
+
   const botId = req.params.botId
   let { page, limit } = req.query
   page = page || 1
@@ -97,6 +115,8 @@ router.get('/bots/:botId/subscribers', (req, res) => {
 })
 
 router.post('/send_message', (req, res) => {
+  if (invalidSession(req.session)) return res.sendStatus(401)
+
   const { botCode, messageText, onlyActive } = req.body
   const whereClause = {}
   if (!messageText) return

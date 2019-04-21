@@ -50,8 +50,9 @@ async function start() {
       cookie: { secure: !config.dev }
     })
   )
-  app.use(passport.initialize())
-  app.use(passport.session())
+  // TODO: we could delete passport?
+  // app.use(passport.initialize())
+  // app.use(passport.session())
 
   app.get('/version', function(req, res) {
     console.debug('get /')

@@ -12,13 +12,8 @@
         <!-- Бот -->
         <b-row>
           <b-col>
-            <select
-              id="botSelect"
-              v-model="selectedBotId"
-              class="form-control"
-              @change="onchange()"
-            >
-              <option disabled value="choose_value">Выберите бота</option>
+            <select id="botSelect" v-model="selectedBotId" class="form-control">
+              <option disabled :value="extraBotValue">Выберите бота</option>
               <!-- TODO: use component -->
               <option
                 v-for="option in botOptions"
@@ -62,13 +57,7 @@
         </b-row>
         <b-row>
           <b-col>
-            <BotSubscribers
-              :items="subscribers"
-              :current-page="currentPage"
-              :per-page="perPage"
-              :total-items="totalItems"
-              @current-page-updated="currentPageUpdated"
-            />
+            <BotSubscribers :bot-id="selectedBotId" :per-page="perPage" />
           </b-col>
         </b-row>
         <!-- Область для показа ошибки -->
@@ -87,15 +76,17 @@
 import axios from 'axios'
 
 import BotSubscribers from '~/components/BotSubscribers.vue'
+import { VUE_DROPDOWN_EXTRA_ITEM_VALUE } from './../plugins/constants'
 
 export default {
   components: {
     BotSubscribers
   },
-  middleware: 'authenticated',
+  // middleware: 'authenticated',
   data() {
     return {
-      selectedBotId: 'choose_value',
+      extraBotValue: VUE_DROPDOWN_EXTRA_ITEM_VALUE,
+      selectedBotId: VUE_DROPDOWN_EXTRA_ITEM_VALUE,
       botOptions: [],
       subscribers: [],
       currentPage: 1,
@@ -103,22 +94,22 @@ export default {
       totalItems: 0,
       messageText: '',
       sendMessageResult: '',
-      formError: null
+      formError: null,
+      showOnlyActiveSubscriptions: true
     }
   },
   computed: {
     sendMessageDisabled: function() {
-      return this.selectedBotId === 'choose_value' || this.messageText === ''
+      return (
+        this.selectedBotId === VUE_DROPDOWN_EXTRA_ITEM_VALUE ||
+        this.messageText === ''
+      )
     }
   },
   beforeMount() {
     this.fetchBots()
-    // this.fetchSubscribers()
   },
   methods: {
-    onchange: function() {
-      this.fetchSubscribers(this.selectedBotId)
-    },
     fetchBots: function() {
       axios
         .get('/api/bots')
@@ -126,23 +117,6 @@ export default {
         .catch(error => {
           this.formError = error.message
         })
-    },
-    fetchSubscribers: function(botId, page = 1, limit = 10) {
-      axios
-        .get(`/api/bots/${botId}/subscribers`, {
-          params: { page: page, limit: limit }
-        })
-        .then(response => {
-          // TODO: totalItems and subscribers should be fetched separately
-          this.totalItems = parseInt(response.headers['x-total-count'], 10)
-          this.subscribers = response.data
-        })
-        .catch(error => {
-          this.formError = error.message
-        })
-    },
-    currentPageUpdated: function(newCurrentPage) {
-      this.fetchSubscribers(this.selectedBotId, newCurrentPage)
     },
     sendMessage: function() {
       this.sendMessageResult = ''
@@ -159,6 +133,7 @@ export default {
         })
     },
     getBotCode: function(botId) {
+      // TODO: === ?
       const bot = this.botOptions.find(element => element.id == botId)
       return bot.code
     }

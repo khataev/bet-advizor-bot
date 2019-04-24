@@ -81,15 +81,34 @@ router.get('/bots/:botId/subscribers', (req, res) => {
   if (invalidSession(req.session)) return res.sendStatus(401)
 
   const botId = req.params.botId
-  let { page, limit } = req.query
+  let {
+    page,
+    limit,
+    show_only_active: showOnlyActive,
+    telegram_id: chatId
+  } = req.query
+  showOnlyActive = showOnlyActive === 'true'
   page = page || 1
   limit = limit || 10
   const offset = (page - 1) * limit
   logger.debug(`page, ${page}, limit, ${limit}`)
   if (!botId) return res.json({})
 
+  const whereClause = { botId: botId }
+  if (showOnlyActive) {
+    whereClause.currentValidTill = {
+      [Op.gte]: DateTime.local().toJSDate()
+    }
+  }
+
+  if (chatId) {
+    whereClause.chatId = {
+      [Op.eq]: chatId
+    }
+  }
+
   Subscriber.findAll({
-    where: { botId: botId },
+    where: whereClause,
     attributes: [
       [models.sequelize.fn('COUNT', models.sequelize.col('*')), 'cnt']
     ],
@@ -100,7 +119,7 @@ router.get('/bots/:botId/subscribers', (req, res) => {
   })
 
   Subscriber.findAll({
-    where: { botId: botId },
+    where: whereClause,
     order: [['createdAt', 'asc']],
     offset: offset,
     limit: limit

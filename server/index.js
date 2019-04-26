@@ -60,8 +60,6 @@ async function start() {
   })
 
   api_tokens.forEach(codeToken => {
-    // console.log('1', telegramApi)
-    // console.log('2', telegramApi.parseBotCodeToken)
     const { code, token } = telegramApi.parseBotCodeToken(codeToken)
 
     app.post(`/${token}`, function(req, res) {

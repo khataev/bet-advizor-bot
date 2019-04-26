@@ -29,6 +29,22 @@ function invalidSession(session) {
   return expired || !session.authUser
 }
 
+function constructWhereClause(botId, chatId, showOnlyActive) {
+  const whereClause = {}
+
+  if (botId) whereClause.botId = botId
+
+  if (showOnlyActive) {
+    whereClause.currentValidTill = {
+      [Op.gte]: DateTime.local().toJSDate()
+    }
+  }
+
+  if (chatId) whereClause.chatId = { [Op.eq]: chatId }
+
+  return whereClause
+}
+
 // Transform req & res to have the same API as express
 // So we can use res.status() & res.json()
 const app = express()
@@ -81,12 +97,7 @@ router.get('/bots/:botId/subscribers', (req, res) => {
   if (invalidSession(req.session)) return res.sendStatus(401)
 
   const botId = req.params.botId
-  let {
-    page,
-    limit,
-    show_only_active: showOnlyActive,
-    telegram_id: chatId
-  } = req.query
+  let { page, limit, showOnlyActive, telegramId: chatId } = req.query
   showOnlyActive = showOnlyActive === 'true'
   page = page || 1
   limit = limit || 10
@@ -94,18 +105,7 @@ router.get('/bots/:botId/subscribers', (req, res) => {
   logger.debug(`page, ${page}, limit, ${limit}`)
   if (!botId) return res.json({})
 
-  const whereClause = { botId: botId }
-  if (showOnlyActive) {
-    whereClause.currentValidTill = {
-      [Op.gte]: DateTime.local().toJSDate()
-    }
-  }
-
-  if (chatId) {
-    whereClause.chatId = {
-      [Op.eq]: chatId
-    }
-  }
+  const whereClause = constructWhereClause(botId, chatId, showOnlyActive)
 
   Subscriber.findAll({
     where: whereClause,
@@ -139,14 +139,11 @@ router.get('/bots/:botId/subscribers', (req, res) => {
 router.post('/send_message', (req, res) => {
   if (invalidSession(req.session)) return res.sendStatus(401)
 
-  const { botCode, messageText, onlyActive } = req.body
-  const whereClause = {}
+  const { botCode, messageText, showOnlyActive, telegramId: chatId } = req.body
+  const whereClause = constructWhereClause(null, chatId, showOnlyActive)
   if (!messageText) return
 
   try {
-    if (onlyActive) {
-      whereClause.currentValidTill = { [Op.gte]: new Date() }
-    }
     telegramApi.sendToTelegram(messageText, {}, botCode, whereClause)
     res.json({ ok: true, message: 'SUCCESS' })
   } catch (e) {

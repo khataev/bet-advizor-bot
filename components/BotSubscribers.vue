@@ -122,6 +122,7 @@ export default {
     },
     innerShowOnlyActiveSubscriptions: {
       handler: function(value) {
+        this.$emit('filter-params-updated', this.getFilterParams())
         this.innerCurrentPage = 1
 
         this.fetchSubscribers(
@@ -143,7 +144,14 @@ export default {
     )
   },
   methods: {
+    getFilterParams: function() {
+      return {
+        showOnlyActiveSubscriptions: this.innerShowOnlyActiveSubscriptions,
+        telegramId: this.innerTelegramId
+      }
+    },
     submitSearch: function() {
+      this.$emit('filter-params-updated', this.getFilterParams())
       // TODO: how to avoid double fetch?
       this.innerCurrentPage = 1
 
@@ -170,8 +178,8 @@ export default {
           params: {
             page: page,
             limit: limit,
-            show_only_active: showOnlyActive,
-            telegram_id: telegramId
+            showOnlyActive: showOnlyActive,
+            telegramId: telegramId
           }
         })
         .then(response => {

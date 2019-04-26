@@ -57,7 +57,11 @@
         </b-row>
         <b-row>
           <b-col>
-            <BotSubscribers :bot-id="selectedBotId" :per-page="perPage" />
+            <BotSubscribers
+              :bot-id="selectedBotId"
+              :per-page="perPage"
+              @filter-params-updated="onFilterParamsUpdated"
+            />
           </b-col>
         </b-row>
         <!-- Область для показа ошибки -->
@@ -88,14 +92,11 @@ export default {
       extraBotValue: VUE_DROPDOWN_EXTRA_ITEM_VALUE,
       selectedBotId: VUE_DROPDOWN_EXTRA_ITEM_VALUE,
       botOptions: [],
-      subscribers: [],
-      currentPage: 1,
       perPage: 10,
-      totalItems: 0,
       messageText: '',
       sendMessageResult: '',
       formError: null,
-      showOnlyActiveSubscriptions: true
+      filterParams: {}
     }
   },
   computed: {
@@ -123,7 +124,8 @@ export default {
       axios
         .post('/api/send_message', {
           botCode: this.getBotCode(this.selectedBotId),
-          onlyActive: true,
+          showOnlyActive: this.filterParams.showOnlyActiveSubscriptions,
+          telegramId: this.filterParams.telegramId,
           messageText: this.messageText
         })
         .then(response => (this.sendMessageResult = response.data.message))
@@ -134,8 +136,11 @@ export default {
     },
     getBotCode: function(botId) {
       // TODO: === ?
-      const bot = this.botOptions.find(element => element.id == botId)
+      const bot = this.botOptions.find(element => element.id === botId)
       return bot.code
+    },
+    onFilterParamsUpdated: function(value) {
+      this.filterParams = value
     }
   }
 }

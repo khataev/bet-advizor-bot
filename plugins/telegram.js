@@ -144,12 +144,15 @@ const Telegram = function(settings, logger, set_webhooks = false) {
       logger.debug(`incoming message: ${msg.text}`)
 
       const chat_id = msg.chat.id
-      if (msg.text.search(/\/info|\/start/) >= 0) return
-
-      if (msg.text.search(/ОПЛАТИТЬ ПОДПИСКУ|ОСТАЛИСЬ ВОПРОСЫ/) >= 0) return
+      if (msg.text && msg.text.search(/\/info|\/start/) >= 0) return
+      if (
+        msg.text &&
+        msg.text.search(/ОПЛАТИТЬ ПОДПИСКУ|ОСТАЛИСЬ ВОПРОСЫ/) >= 0
+      )
+        return
 
       if (wizardApi.payWizardStarted(chat_id, bot.code)) {
-        const wizard = wizardApi.getPayWizard(chat_id, bot.code)
+        // const wizard = wizardApi.getPayWizard(chat_id, bot.code)
         wizardApi.handlePayWizardStep(chat_id, bot.code, msg.text)
       } else {
         bot.sendMessage(
@@ -195,11 +198,14 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     bots[code].processUpdate(message)
   }
 
-  // TODO
-  this.getChatIds = function() {
-    return settings
-      .get('credentials.telegram_bot.chat_ids')
-      .map(chat_id => chat_id.toString().trim())
+  this.sendMessage = function(chatId, text, replyMarkupOptions, code) {
+    if (settings.get('debug.send_message')) {
+      return bots[code].sendMessage(chatId, text, replyMarkupOptions)
+    } else {
+      return new Promise(resolve => {
+        resolve('Фиктивная отправка')
+      })
+    }
   }
 
   this.sendMessageToSubscriber = function(
@@ -224,8 +230,12 @@ const Telegram = function(settings, logger, set_webhooks = false) {
       `sendMessageToSubscriber. chat_id: ${sanitized_chat_id}, text: ${sanitizedText}, code: ${code}`
     )
 
-    return bots[code]
-      .sendMessage(sanitized_chat_id, sanitizedText, reply_markup_options)
+    return this.sendMessage(
+      sanitized_chat_id,
+      sanitizedText,
+      reply_markup_options,
+      code
+    )
       .then(message => {
         logger.warn(
           `sendMessageToSubscriber. SEND! chat_id: ${sanitized_chat_id}, text: ${cropSentMessage(
@@ -235,6 +245,7 @@ const Telegram = function(settings, logger, set_webhooks = false) {
         logger.debug(message)
         return message
       })
+      .catch(error => logger.error(error.message))
   }
 
   // HINT: not async function
@@ -255,7 +266,7 @@ const Telegram = function(settings, logger, set_webhooks = false) {
       await util.sleep(parent.getDelayBetweenRequests())
     }
 
-    this.processSubscribersInBatches(botCode, processor, whereClause)
+    return this.processSubscribersInBatches(botCode, processor, whereClause)
   }
 
   // this.getApiToken = function(settings) {
@@ -293,15 +304,19 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     const bot = await models.Bot.findOne({ where: { code: botCode } })
     // HINT: aware of parameter mutation
     whereClause.bot_id = bot.id
-    // console.log(bot.id, bot.code)
-    // bot.subscribers.forEach((subscriber) => console.log(subscriber.email))
     for await (const subscribers of models.Subscriber.batch({
       where: whereClause,
       batchSize: batchSize
     })) {
-      for (const subscriber of subscribers) {
+      for await (const subscriber of subscribers) {
         await subscriberProcessor(subscriber)
       }
+
+      // return util.asyncForEach(subscribers, async (i, subscriber) => {
+      //   console.log('subscriber', subscriber.id)
+      //   await subscriberProcessor(subscriber)
+      //   // await console.log('subscriber', subscriber.id)
+      // })
     }
   }
 
@@ -372,6 +387,10 @@ const Telegram = function(settings, logger, set_webhooks = false) {
         )
       }
     })
+  }
+
+  this.getBot = function(botCode) {
+    return bots[botCode]
   }
 
   this.initializeBots()

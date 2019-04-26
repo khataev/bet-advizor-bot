@@ -109,6 +109,12 @@ const config = convict({
     }
   },
   debug: {
+    send_message: {
+      doc: 'Determines wether message sending is turned on or off',
+      format: Boolean,
+      default: true,
+      env: 'DEBUG_SEND_MESSAGE'
+    },
     message_prepender: {
       doc: 'Text to prepend every message with',
       format: String,

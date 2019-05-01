@@ -56,7 +56,11 @@ async function start() {
 
   app.get('/version', function(req, res) {
     console.debug('get /')
-    res.json({ version: packageInfo.version })
+    res.json({
+      version: packageInfo.version,
+      release: process.env.HEROKU_RELEASE_VERSION,
+      commit: process.env.HEROKU_SLUG_COMMIT
+    })
   })
 
   api_tokens.forEach(codeToken => {

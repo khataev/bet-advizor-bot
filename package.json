@@ -1,6 +1,6 @@
 {
   "name": "bet-advizor-bot",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "description": "Bet Advizor Bot System",
   "author": "Andrey Khataev",
   "private": true,
@@ -15,6 +15,7 @@
     "db:create": "node_modules/.bin/sequelize db:create --url $DATABASE_URL",
     "db:migrate": "node_modules/.bin/sequelize db:migrate --url $DATABASE_URL",
     "db:migrate:undo": "node_modules/.bin/sequelize db:migrate:undo --url $DATABASE_URL",
+    "db:migrate:undo:all": "node_modules/.bin/sequelize db:migrate:undo:all --url $DATABASE_URL",
     "db:seed:all": "node_modules/.bin/sequelize db:seed:all --url $DATABASE_URL",
     "db:seed:undo:all": "node_modules/.bin/sequelize db:seed:undo:all --url $DATABASE_URL"
   },

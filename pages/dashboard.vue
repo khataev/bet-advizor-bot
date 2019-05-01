@@ -150,7 +150,7 @@ export default {
       }
     }
   },
-  // middleware: 'authenticated',
+  middleware: 'authenticated',
   data() {
     return {
       extraBotValue: VUE_DROPDOWN_EXTRA_ITEM_VALUE,

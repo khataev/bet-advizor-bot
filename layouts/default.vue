@@ -7,6 +7,9 @@
             <li v-if="$store.state.authUser">
               <NuxtLink to="/dashboard">Dashboard</NuxtLink>
             </li>
+            <li v-if="$store.state.authUser && $store.state.authUser.isAdmin">
+              <NuxtLink to="/create_user">Create user</NuxtLink>
+            </li>
             <li v-if="$store.state.authUser">
               <a href="#" @click="logout">Logout</a>
               <!--<NuxtLink to="/logout">Logout</NuxtLink>-->

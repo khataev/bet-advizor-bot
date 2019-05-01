@@ -58,10 +58,14 @@ router.use((req, res, next) => {
 
 // Add POST - /api/login
 router.post('/login', (req, res) => {
-  User.findOne({ where: { email: req.body.email } })
+  User.findOne({ where: { email: req.body.email.toLowerCase() } })
     .then(user => {
       if (user && user.verifyPassword(req.body.password)) {
-        const authUser = { email: user.email, name: user.name }
+        const authUser = {
+          email: user.email,
+          name: user.name,
+          isAdmin: user.isAdmin
+        }
         req.session.authUser = authUser
         req.session.cookie.expires = DateTime.local()
           .plus({ hours: 12 })
@@ -72,6 +76,26 @@ router.post('/login', (req, res) => {
       }
     })
     .catch(() => res.status(401).json({ message: 'Bad credentials' }))
+})
+
+// Create User
+router.post('/users', async (req, res) => {
+  if (invalidSession(req.session)) return res.sendStatus(401)
+
+  try {
+    const { email, name, password, passwordConfirmation } = req.body
+    const user = User.build({
+      email: email,
+      name: name,
+      password: password,
+      passwordConfirmation: passwordConfirmation
+    })
+    user.encryptPassword()
+    await user.save()
+    res.status(200).json({ ok: true, message: 'SUCCESS' })
+  } catch (error) {
+    res.json({ ok: false, message: 'FAILURE', error_message: error.message })
+  }
 })
 
 // Add POST - /api/logout

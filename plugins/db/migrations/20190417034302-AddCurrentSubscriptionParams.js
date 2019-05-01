@@ -8,7 +8,7 @@ module.exports = {
     await queryInterface.addColumn('Subscribers', 'current_valid_till', {
       type: Sequelize.DATE
     })
-    await queryInterface.addIndex('Subscribers', {
+    return queryInterface.addIndex('Subscribers', {
       fields: ['current_valid_till']
     })
   },

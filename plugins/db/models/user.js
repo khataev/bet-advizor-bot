@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
         field: 'encrypted_password',
         type: DataTypes.STRING
       },
+      isAdmin: {
+        field: 'is_admin',
+        type: DataTypes.BOOLEAN
+      },
       password: DataTypes.VIRTUAL,
       passwordConfirmation: DataTypes.VIRTUAL,
       name: DataTypes.STRING

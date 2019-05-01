@@ -51,11 +51,9 @@
 
 <script>
 import axios from 'axios'
-// import BFormInput from 'bootstrap-vue/src/components/form-input/form-input'
 import { VUE_DROPDOWN_EXTRA_ITEM_VALUE } from './../plugins/constants'
 
 export default {
-  // components: { BFormInput },
   props: {
     botId: {
       type: Number

@@ -393,7 +393,7 @@ const Telegram = function(settings, logger, set_webhooks = false) {
     return bots[botCode]
   }
 
-  this.initializeBots()
+  // this.initializeBots()
 }
 
 // async function init() {

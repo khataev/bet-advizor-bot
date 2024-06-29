@@ -1,4 +1,4 @@
-const request = require('request-promise')
+const request = require('request-promise-native')
 // require('request-promise').debug = true
 
 const settings = require('./config')
